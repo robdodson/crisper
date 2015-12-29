@@ -63,7 +63,11 @@ module.exports = function crisp(options) {
     if (!noSemiColonInsertion.test(lastline)) {
       content += ';';
     }
-    content = '/* assetpath="'+assetpath.value+'" */\n' + content;
+    // Stick assetpath comment in the head of the file. Will be useful
+    // for tools that extract the individual script files
+    if (assetpath && assetpath.value) {
+      content = '/* assetpath="'+assetpath.value+'" */\n' + content;
+    }
     contents.push(content);
   });
 
