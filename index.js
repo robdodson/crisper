@@ -20,7 +20,6 @@ var inlineScriptFinder = pred.AND(
     pred.NOT(
       pred.hasAttr('type')
     ),
-    pred.hasAttrValue('type', 'text/ecmascript-6'),
     pred.hasAttrValue('type', 'application/javascript'),
     pred.hasAttrValue('type', 'text/javascript')
   ),
@@ -47,6 +46,12 @@ module.exports = function crisp(options) {
   scripts.forEach(function(sn) {
     var nidx = sn.parentNode.childNodes.indexOf(sn) + 1;
     var next = sn.parentNode.childNodes[nidx];
+    // Find assetpath in case we're generating separate scripts
+    var assetpath = sn.parentNode.attrs.find(function(attr) {
+      if (attr.name === 'assetpath') {
+        return attr;
+      }
+    });
     dom5.remove(sn);
     // remove newline after script to get rid of nasty whitespace
     if (next && dom5.isTextNode(next) && !/\S/.test(dom5.getTextContent(next))) {
@@ -58,6 +63,7 @@ module.exports = function crisp(options) {
     if (!noSemiColonInsertion.test(lastline)) {
       content += ';';
     }
+    content = '/* assetpath="'+assetpath.value+'" */\n' + content;
     contents.push(content);
   });
 
@@ -81,6 +87,7 @@ module.exports = function crisp(options) {
 
   return {
     html: html,
-    js: js
+    js: js,
+    scriptFiles: contents
   };
 };

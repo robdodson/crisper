@@ -65,6 +65,11 @@ var cli = cliArgs([
     description: 'Always create an output script file, even if it is empty.'
   },
   {
+    name: 'separate-scripts',
+    type: Boolean,
+    description: 'Extract each script block to its own file. Uses the --js argument as a prefix.'
+  },
+  {
     name: 'help',
     type: Boolean,
     description: 'Print usage'
@@ -107,6 +112,7 @@ var outScriptUri = path.relative(path.dirname(args.html), args.js);
 var placeInHead = args['script-in-head'];
 var onlySplit = args['only-split'];
 var alwaysWriteScript = args['always-write-script'];
+var separateScripts = args['separate-scripts'];
 
 var docText = '';
 
@@ -116,11 +122,21 @@ function processSource() {
     jsFileName: outScriptUri,
     scriptInHead: placeInHead,
     onlySplit: onlySplit,
-    alwaysWriteScript: alwaysWriteScript
+    alwaysWriteScript: alwaysWriteScript,
+    separateScripts: separateScripts
   });
   fs.writeFileSync(outhtml, split.html, 'utf-8');
   if (split.js || split.js === "" && alwaysWriteScript) {
-    fs.writeFileSync(outscript, split.js, 'utf-8');
+    if (separateScripts) {
+      var dir = path.dirname(outscript);
+      var prefix = path.basename(outscript, '.js');
+      var len = split.scriptFiles.length;
+      for (var i = 0; i < len; i++) {
+        fs.writeFileSync(path.join(dir, prefix + i + '.js'), split.scriptFiles[i], 'utf-8');
+      }
+    } else {
+      fs.writeFileSync(outscript, split.js, 'utf-8');
+    }
   }
 }
 
